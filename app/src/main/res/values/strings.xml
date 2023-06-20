@@ -1,0 +1,77 @@
+<resources>
+    <string name="app_name">Polar BLE SDK Example</string>
+
+    <string name="log_in">Log in</string>
+    <string name="password">Password</string>
+    <string name="email">Email</string>
+    <string name="sign_in">Sign in</string>
+    <string name="oppure">Oppure</string>
+    <string name="register">Registrati</string>
+
+    <string name="nome">Nome</string>
+    <string name="cognome">Cognome</string>
+    <string name="parametri">Aggiungi parametri</string>
+    <string name="parameters">Parametri</string>
+
+    <string name="pressione">Pressione Arteriosa</string>
+    <string name="diabete">Diabete</string>
+
+    <string name="add_par">Aggiungi valori</string>
+
+    <string name="giorno">Giorno</string>
+    <string name="ora">Ora hh:mm:ss</string>
+    <string name="valore">Valore Misurato</string>
+
+    <string name="aggiungi">Aggiungi valore</string>
+
+    <string name="mostra_grafici">Mostra valori</string>
+    <string name="scrivi_exercises">Scrivi esercizio</string>
+
+    <string name="start_hr_stream">Start Hr Stream</string>
+    <string name="stop_hr_stream">Stop Hr Stream</string>
+    <string name="start_ecg_stream">Start ECG Stream</string>
+    <string name="stop_ecg_stream">Stop ECG Stream</string>
+    <string name="start_acc_stream">Start ACC Stream</string>
+    <string name="stop_acc_stream">Stop ACC Stream</string>
+    <string name="start_gyro_stream">Start GYRO Stream</string>
+    <string name="stop_gyro_stream">Stop GYRO Stream</string>
+    <string name="start_mag_stream">Start Magnetometer Stream</string>
+    <string name="stop_mag_stream">Stop Magnetometer Stream</string>
+    <string name="start_ppg_stream">Start PPG Stream</string>
+    <string name="stop_ppg_stream">Stop PPG Stream</string>
+    <string name="start_ppi_stream">Start PPI Stream</string>
+    <string name="stop_ppi_stream">Stop PPI Stream</string>
+    <string name="enable_sdk_mode">Enable SDK mode</string>
+    <string name="disable_sdk_mode">Disable SDK mode</string>
+    <string name="listen_broadcast">Ascolta in broadcast</string>
+    <string name="listening_broadcast">Ascoltando in broadcast</string>
+    <string name="connect_to_veritysense">Connetti il verity sense %s</string>
+    <string name="disconnect_from_veritysense">Disconnetti il verity sense %s</string>
+    <string name="see_options_vs">Guarda le opzioni di vs</string>
+    <string name="connect_to_h10">Connetti il h10 %s</string>
+    <string name="disconnect_from_h10">Disconnetti il h10 %s</string>
+    <string name="see_options_h10">Guarda le opzioni di h10</string>
+    <string name="auto_connect_toggle">Auto Connetti</string>
+    <string name="scan_devices">Scan dei devices</string>
+    <string name="scanning_devices">Stop lo scan dei devices</string>
+    <string name="list_exercises">lista esercizi</string>
+    <string name="read_exercise">leggi esercizio</string>
+    <string name="reading_exercise">leggendo esercizio</string>
+    <string name="remove_exercise">rimuovi esercizio</string>
+    <string name="start_h10_recording">Start H10 recording</string>
+    <string name="stop_h10_recording">Stop H10 recording</string>
+    <string name="h10_recording_status">H10 recording status</string>
+    <string name="set_time">Set time</string>
+    <string name="get_time">Get time</string>
+    <string name="sampling_rate">Sampling rate</string>
+    <string name="resolution">Resolution</string>
+    <string name="range">Range</string>
+    <string name="channels">Channels</string>
+    <string name="ok">OK</string>
+    <string name="list_recordings">list verity sense recordings</string>
+    <string name="start_recording">start verity sense recording</string>
+    <string name="stop_recording">stop verity sense recording</string>
+    <string name="download_recording">download one verity sense recording</string>
+    <string name="delete_recording">delete one verity sense recording</string>
+    <string name="get_disk_space">Get disk space</string>
+</resources>
