@@ -46,12 +46,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+
     <EditText
         android:id="@+id/giorno"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:layout_marginStart="32dp"
-        android:layout_marginTop="48dp"
+        android:layout_marginTop="64dp"
         android:layout_marginEnd="32dp"
         android:background="@android:color/darker_gray"
         android:hint="@string/giorno"
@@ -61,15 +62,16 @@
         android:textColorHint="@color/secondaryDarkColor"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/textView" />
 
     <EditText
         android:id="@+id/ora"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:layout_marginStart="32dp"
-        android:layout_marginTop="92dp"
+        android:layout_marginTop="128dp"
         android:layout_marginEnd="32dp"
         android:background="@android:color/darker_gray"
         android:hint="@string/ora"
@@ -84,14 +86,14 @@
         app:layout_constraintTop_toBottomOf="@id/textView" />
 
     <EditText
-        android:id="@+id/valore"
+        android:id="@+id/max"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:layout_marginStart="32dp"
-        android:layout_marginTop="140dp"
+        android:layout_marginTop="196dp"
         android:layout_marginEnd="32dp"
         android:background="@android:color/darker_gray"
-        android:hint="@string/valore"
+        android:hint="@string/valoreMax"
         android:imeOptions="actionNext"
         android:inputType="textEmailAddress"
         android:textColor="@color/secondaryDarkColor"
@@ -102,6 +104,24 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/textView" />
 
+    <EditText
+        android:id="@+id/min"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="268dp"
+        android:layout_marginEnd="32dp"
+        android:background="@android:color/darker_gray"
+        android:hint="@string/valoreMin"
+        android:imeOptions="actionNext"
+        android:inputType="textEmailAddress"
+        android:textColor="@color/secondaryDarkColor"
+        android:textColorHint="@color/secondaryDarkColor"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/textView" />
 
     <Button
         android:id="@+id/btnadd"
@@ -111,7 +131,7 @@
         android:layout_marginStart="32dp"
         android:layout_marginTop="200dp"
         android:layout_marginEnd="32dp"
-        android:layout_marginBottom="365dp"
+        android:layout_marginBottom="128dp"
         android:background="@drawable/blue_button"
         android:text="@string/aggiungi"
         android:textAllCaps="false"
@@ -120,7 +140,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/valore"
         app:layout_constraintStart_toStartOf="@id/valore"
-        app:layout_constraintTop_toBottomOf="@+id/valore"
-        tools:ignore="MissingConstraints" />
+        app:layout_constraintTop_toBottomOf="@+id/valoreMin"
+        tools:ignore="MissingConstraints,NotSibling,UnknownId" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

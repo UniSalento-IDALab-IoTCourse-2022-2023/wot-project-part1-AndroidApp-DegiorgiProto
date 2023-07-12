@@ -10,6 +10,8 @@
 
     <string name="nome">Nome</string>
     <string name="cognome">Cognome</string>
+    <string name="medico">Email Medico Associato</string>
+
     <string name="parametri">Aggiungi parametri</string>
     <string name="parameters">Parametri</string>
 
@@ -22,10 +24,25 @@
     <string name="ora">Ora hh:mm:ss</string>
     <string name="valore">Valore Misurato</string>
 
-    <string name="aggiungi">Aggiungi valore</string>
+    <string name="valoreMax">Valore Massimo</string>
+    <string name="valoreMin">Valore Minimo</string>
+
+    <string name="aggiungi">Aggiungi</string>
 
     <string name="mostra_grafici">Mostra valori</string>
     <string name="scrivi_exercises">Scrivi esercizio</string>
+
+    <string name="esercizi">Esercizi</string>
+
+    <string name="esercizio">Tipo di esercizio</string>
+    <string name="durata">Durata in minuti</string>
+    <string name="inizio">Orario di inizio</string>
+
+    <string name="ppg">Guarda i grafici di PPG</string>
+
+    <string name="notifiche">Mostra notifiche ricevute</string>
+
+    <string name="seleziona">Seleziona Data</string>
 
     <string name="start_hr_stream">Start Hr Stream</string>
     <string name="stop_hr_stream">Stop Hr Stream</string>

@@ -83,6 +83,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var connecth10: Button
     private lateinit var optionh10: Button
     private lateinit var addParameters: Button
+    private lateinit var notifications: Button
     private lateinit var autoConnectButton: Button
     private lateinit var scanButton: Button
     private lateinit var hrButton: Button
@@ -102,6 +103,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var getTimeButton: Button
     private lateinit var toggleSdkModeButton: Button
     private lateinit var getDiskSpaceButton: Button
+
+    private lateinit var email: String
 
     //Verity Sense offline recording use
 //    private lateinit var listRecordingsButton: Button
@@ -123,7 +126,7 @@ class MainActivity : AppCompatActivity() {
 //        connecth10 = findViewById(R.id.connect_h10)
         optionh10 = findViewById(R.id.see_h10)
         addParameters = findViewById(R.id.parametri)
-
+        notifications = findViewById(R.id.notifications)
         autoConnectButton = findViewById(R.id.auto_connect_button)
         scanButton = findViewById(R.id.scan_button)
 //        hrButton = findViewById(R.id.hr_button)
@@ -149,6 +152,8 @@ class MainActivity : AppCompatActivity() {
 //        stopRecordingButton = findViewById(R.id.stop_recording)
 //        downloadRecordingButton = findViewById(R.id.download_recording)
 //        deleteRecordingButton = findViewById(R.id.delete_recording)
+
+        email = intent.getStringExtra("parEmail")!!
 
         api.setPolarFilter(false)
 
@@ -204,6 +209,10 @@ class MainActivity : AppCompatActivity() {
 //            }
         })
 
+
+//        val mail = intent.getStringExtra("mailis")
+//        val mailAdd = intent.getStringExtra("mailin")
+
         broadcastButton.setOnClickListener {
             if (!this::broadcastDisposable.isInitialized || broadcastDisposable.isDisposed) {
                 toggleButtonDown(broadcastButton, R.string.listening_broadcast)
@@ -228,6 +237,7 @@ class MainActivity : AppCompatActivity() {
 
         optionvs.setOnClickListener {
             val intent = Intent(this, OptionVsActivity::class.java)
+            intent.putExtra("email", email)
             startActivity(intent)
         }
 
@@ -251,11 +261,19 @@ class MainActivity : AppCompatActivity() {
 
         optionh10.setOnClickListener {
             val intent = Intent(this, OptionHActivity::class.java)
+            intent.putExtra("email", email)
             startActivity(intent)
         }
 
         addParameters.setOnClickListener {
             val intent = Intent(this, ParActivity::class.java)
+            intent.putExtra("parEmail", email)
+            startActivity(intent)
+        }
+
+        notifications.setOnClickListener {
+            val intent = Intent(this, NotifyActivity::class.java)
+            intent.putExtra("parEmail", email)
             startActivity(intent)
         }
 

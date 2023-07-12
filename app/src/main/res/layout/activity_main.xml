@@ -57,6 +57,12 @@
             android:text="@string/parametri" />
 
         <Button
+            android:id="@+id/notifications"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/notifiche" />
+
+        <Button
             android:id="@+id/auto_connect_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

@@ -1,31 +1,34 @@
 package com.polar.androidblesdk
 
+import WsBack
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.drawable.DrawableCompat
-import androidx.core.util.Pair
 import com.google.android.material.snackbar.Snackbar
 import com.polar.sdk.api.PolarBleApi
 import com.polar.sdk.api.PolarBleApiCallback
 import com.polar.sdk.api.PolarBleApiDefaultImpl
-import com.polar.sdk.api.PolarH10OfflineExerciseApi
 import com.polar.sdk.api.errors.PolarInvalidArgument
 import com.polar.sdk.api.model.*
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.Disposable
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 class OptionHActivity : AppCompatActivity() {
@@ -36,7 +39,7 @@ class OptionHActivity : AppCompatActivity() {
     }
 
     // ATTENTION! Replace with the device ID from your device.
-    private var h10Id = "1234"
+    private var h10Id = "C423FD21"
 
     private val api: PolarBleApi by lazy {
         // Notice all features are enabled
@@ -57,7 +60,7 @@ class OptionHActivity : AppCompatActivity() {
 //    private lateinit var broadcastDisposable: Disposable
 //    private var scanDisposable: Disposable? = null
 //    private var autoConnectDisposable: Disposable? = null
-//    private var hrDisposable: Disposable? = null
+    private var hrDisposable: Disposable? = null
 //    private var ecgDisposable: Disposable? = null
 //    private var accDisposable: Disposable? = null
 //    private var gyrDisposable: Disposable? = null
@@ -65,16 +68,15 @@ class OptionHActivity : AppCompatActivity() {
 //    private var ppgDisposable: Disposable? = null
 //    private var ppiDisposable: Disposable? = null
     private var sdkModeEnableDisposable: Disposable? = null
-    private var recordingStartStopDisposable: Disposable? = null
-    private var recordingStatusReadDisposable: Disposable? = null
-    private var listExercisesDisposable: Disposable? = null
-    private var fetchExerciseDisposable: Disposable? = null
-    private var removeExerciseDisposable: Disposable? = null
+//    private var recordingStartStopDisposable: Disposable? = null
+//    private var recordingStatusReadDisposable: Disposable? = null
+//    private var listExercisesDisposable: Disposable? = null
+//    private var fetchExerciseDisposable: Disposable? = null
+//    private var removeExerciseDisposable: Disposable? = null
 
     private var sdkModeEnabledStatus = false
     private var deviceConnected = false
     private var bluetoothEnabled = false
-    private var exerciseEntries: MutableList<PolarExerciseEntry> = mutableListOf()
 
 //    private lateinit var broadcastButton: Button
 //    private lateinit var connectvs: Button
@@ -92,15 +94,16 @@ class OptionHActivity : AppCompatActivity() {
 //    private lateinit var ppiButton: Button
     private lateinit var writeExerciseButton: Button
     private lateinit var listExercisesButton: Button
-    private lateinit var fetchExerciseButton: Button
+//    private lateinit var fetchExerciseButton: Button
     private lateinit var removeExerciseButton: Button
     private lateinit var startH10RecordingButton: Button
-    private lateinit var stopH10RecordingButton: Button
-    private lateinit var readH10RecordingStatusButton: Button
-    private lateinit var setTimeButton: Button
-    private lateinit var getTimeButton: Button
+//    private lateinit var stopH10RecordingButton: Button
+//    private lateinit var readH10RecordingStatusButton: Button
+    private lateinit var graphicButton: Button
+//    private lateinit var setTimeButton: Button
+//    private lateinit var getTimeButton: Button
     private lateinit var toggleSdkModeButton: Button
-    private lateinit var getDiskSpaceButton: Button
+//    private lateinit var getDiskSpaceButton: Button
 
     //Verity Sense offline recording use
 //    private lateinit var listRecordingsButton: Button
@@ -110,6 +113,7 @@ class OptionHActivity : AppCompatActivity() {
 //    private lateinit var deleteRecordingButton: Button
 //    private val entryCache: MutableMap<String, MutableList<PolarOfflineRecordingEntry>> = mutableMapOf()
 
+    private lateinit var countDownTimer: CountDownTimer
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -133,15 +137,16 @@ class OptionHActivity : AppCompatActivity() {
 //        ppiButton = findViewById(R.id.ohr_ppi_button)
         writeExerciseButton = findViewById(R.id.write_exercises)
         listExercisesButton = findViewById(R.id.list_exercises)
-        fetchExerciseButton = findViewById(R.id.read_exercise)
+//        fetchExerciseButton = findViewById(R.id.read_exercise)
         removeExerciseButton = findViewById(R.id.remove_exercise)
         startH10RecordingButton = findViewById(R.id.start_h10_recording)
-        stopH10RecordingButton = findViewById(R.id.stop_h10_recording)
-        readH10RecordingStatusButton = findViewById(R.id.h10_recording_status)
-        setTimeButton = findViewById(R.id.set_time)
-        getTimeButton = findViewById(R.id.get_time)
+//        stopH10RecordingButton = findViewById(R.id.stop_h10_recording)
+//        readH10RecordingStatusButton = findViewById(R.id.h10_recording_status)
+        graphicButton = findViewById(R.id.graphics)
+//        setTimeButton = findViewById(R.id.set_time)
+//        getTimeButton = findViewById(R.id.get_time)
         toggleSdkModeButton = findViewById(R.id.toggle_SDK_mode)
-        getDiskSpaceButton = findViewById(R.id.get_disk_space)
+//        getDiskSpaceButton = findViewById(R.id.get_disk_space)
 //        //Verity Sense recording buttons
 //        listRecordingsButton = findViewById(R.id.list_recordings)
 //        startRecordingButton = findViewById(R.id.start_recording)
@@ -149,6 +154,15 @@ class OptionHActivity : AppCompatActivity() {
 //        downloadRecordingButton = findViewById(R.id.download_recording)
 //        deleteRecordingButton = findViewById(R.id.delete_recording)
 
+        val esercizio = intent.getStringExtra("esercizio")
+        val durata = intent.getStringExtra("durata")
+        val inizio = intent.getStringExtra("inizio")
+        val email = intent.getStringExtra("email")
+
+        val myConn = Backend()
+        val urls = "ws://192.168.0.105:8000"
+        val ws = WsBack(urls, applicationContext, email.toString());
+        
         api.setPolarFilter(false)
 
         // If there is need to log what is happening inside the SDK, it can be enabled like this:
@@ -174,7 +188,7 @@ class OptionHActivity : AppCompatActivity() {
                 Log.d(TAG, "CONNECTED: ${polarDeviceInfo.deviceId}")
                 h10Id = polarDeviceInfo.deviceId
                 deviceConnected = true
-                val buttonText = getString(R.string.disconnect_from_veritysense, h10Id)
+                val buttonText = getString(R.string.disconnect_from_h10, h10Id)
                 toggleButtonDown(connecth10, buttonText)
             }
 
@@ -185,7 +199,7 @@ class OptionHActivity : AppCompatActivity() {
             override fun deviceDisconnected(polarDeviceInfo: PolarDeviceInfo) {
                 Log.d(TAG, "DISCONNECTED: ${polarDeviceInfo.deviceId}")
                 deviceConnected = false
-                val buttonText = getString(R.string.connect_to_veritysense, h10Id)
+                val buttonText = getString(R.string.connect_to_h10, h10Id)
                 toggleButtonUp(connecth10, buttonText)
                 toggleButtonUp(toggleSdkModeButton, R.string.enable_sdk_mode)
             }
@@ -289,30 +303,54 @@ class OptionHActivity : AppCompatActivity() {
 //            }
 //        }
 
-//        hrButton.setOnClickListener {
-//            val isDisposed = hrDisposable?.isDisposed ?: true
-//            if (isDisposed) {
-//                toggleButtonDown(hrButton, R.string.stop_hr_stream)
-//                hrDisposable = api.startHrStreaming(deviceId)
-//                    .observeOn(AndroidSchedulers.mainThread())
-//                    .subscribe(
-//                        { hrData: PolarHrData ->
-//                            for (sample in hrData.samples) {
-//                                Log.d(TAG, "HR     bpm: ${sample.hr} rrs: ${sample.rrsMs} rrAvailable: ${sample.rrAvailable} contactStatus: ${sample.contactStatus} contactStatusSupported: ${sample.contactStatusSupported}")
-//                            }
-//                        },
-//                        { error: Throwable ->
-//                            toggleButtonUp(hrButton, R.string.start_hr_stream)
-//                            Log.e(TAG, "HR stream failed. Reason $error")
-//                        },
-//                        { Log.d(TAG, "HR stream complete") }
-//                    )
-//            } else {
-//                toggleButtonUp(hrButton, R.string.start_hr_stream)
-//                // NOTE dispose will stop streaming if it is "running"
-//                hrDisposable?.dispose()
-//            }
-//        }
+        startH10RecordingButton.setOnClickListener {
+            val isDisposed = hrDisposable?.isDisposed ?: true
+            if (isDisposed) {
+                toggleButtonDown(startH10RecordingButton, R.string.stop_hr_stream)
+                hrDisposable = api.startHrStreaming(h10Id)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                        { hrData: PolarHrData ->
+                            for (sample in hrData.samples) {
+                                val urlPost = "http://192.168.0.105:3000/aggiungiH10"
+                                val req =
+                                    "{ \"heartRate\": \"${sample.hr}\", \"rrs\": \"${sample.rrsMs}\", \"rr\" : \"${sample.rrAvailable}\", \"emailAddress\": \"$email\" }"
+                                Thread { myConn.post_request(urlPost, req) }.start()
+                                Log.d(TAG, "HR     bpm: ${sample.hr} rrs: ${sample.rrsMs} rrAvailable: ${sample.rrAvailable} contactStatus: ${sample.contactStatus} contactStatusSupported: ${sample.contactStatusSupported}")
+                            }
+                            ws.start()
+                            //val intent = Intent(this, MainActivity::class.java)
+                            countDownTimer = object : CountDownTimer(15000, 1000) {
+                                override fun onTick(millisUntilFinished: Long) {
+                                    // Avvia il conteggio alla rovescia
+                                    Log.d("TIMER", "Il timer è partito")
+                                }
+
+                                @RequiresApi(Build.VERSION_CODES.O)
+                                override fun onFinish() {
+                                    // Termina il conteggio alla rovescia e fa camminare l'immagine
+                                    Log.d("TIMER", "Il timer ha finito")
+                                    ws.sendMessage("Non misuri l'heart rate del polar H10 dal ${nowTime()}")
+                                    ws.disconnect()
+                                }
+                            }
+
+                            // Avvia il contatore
+                            countDownTimer.start()
+                            //startActivity(intent)
+                        },
+                        { error: Throwable ->
+                            toggleButtonUp(startH10RecordingButton, R.string.start_hr_stream)
+                            Log.e(TAG, "HR stream failed. Reason $error")
+                        },
+                        { Log.d(TAG, "HR stream complete") }
+                    )
+            } else {
+                toggleButtonUp(startH10RecordingButton, R.string.start_hr_stream)
+                // NOTE dispose will stop streaming if it is "running"
+                hrDisposable?.dispose()
+            }
+        }
 
 //        ecgButton.setOnClickListener {
 //            val isDisposed = ecgDisposable?.isDisposed ?: true
@@ -486,218 +524,239 @@ class OptionHActivity : AppCompatActivity() {
 //        }
 
         writeExerciseButton.setOnClickListener {
-            //todo
+            val intent = Intent(this, ExerciseActivity::class.java)
+            intent.putExtra("email", email)
+            startActivity(intent)
         }
 
         listExercisesButton.setOnClickListener {
-            val isDisposed = listExercisesDisposable?.isDisposed ?: true
-            if (isDisposed) {
-                exerciseEntries.clear()
-                listExercisesDisposable = api.listExercises(h10Id)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(
-                        { polarExerciseEntry: PolarExerciseEntry ->
-                            Log.d(TAG, "next: ${polarExerciseEntry.date} path: ${polarExerciseEntry.path} id: ${polarExerciseEntry.identifier}")
-                            exerciseEntries.add(polarExerciseEntry)
-                        },
-                        { error: Throwable ->
-                            val errorDescription = "Failed to list exercises. Reason: $error"
-                            Log.w(TAG, errorDescription)
-                            showSnackbar(errorDescription)
-                        },
-                        {
-                            val completedOk = "Exercise listing completed. Listed ${exerciseEntries.count()} exercises on device $h10Id."
-                            Log.d(TAG, completedOk)
-                            showSnackbar(completedOk)
-                        }
-                    )
-            } else {
-                Log.d(TAG, "Listing of exercise entries is in progress at the moment.")
-            }
+            val intent = Intent(this, ShowExeActivity::class.java)
+            intent.putExtra("email", email)
+            startActivity(intent)
         }
 
-        fetchExerciseButton.setOnClickListener {
-            val isDisposed = fetchExerciseDisposable?.isDisposed ?: true
-            if (isDisposed) {
-                if (exerciseEntries.isNotEmpty()) {
-                    toggleButtonDown(fetchExerciseButton, R.string.reading_exercise)
-                    // just for the example purpose read the entry which is first on the exerciseEntries list
-                    fetchExerciseDisposable = api.fetchExercise(h10Id, exerciseEntries.first())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .doFinally {
-                            toggleButtonUp(fetchExerciseButton, R.string.read_exercise)
-                        }
-                        .subscribe(
-                            { polarExerciseData: PolarExerciseData ->
-                                Log.d(TAG, "Exercise data count: ${polarExerciseData.hrSamples.size} samples: ${polarExerciseData.hrSamples}")
-                                var onComplete = "Exercise has ${polarExerciseData.hrSamples.size} hr samples.\n\n"
-                                if (polarExerciseData.hrSamples.size >= 3)
-                                    onComplete += "HR data {${polarExerciseData.hrSamples[0]}, ${polarExerciseData.hrSamples[1]}, ${polarExerciseData.hrSamples[2]} ...}"
-                                showDialog("Exercise data read", onComplete)
-                            },
-                            { error: Throwable ->
-                                val errorDescription = "Failed to read exercise. Reason: $error"
-                                Log.e(TAG, errorDescription)
-                                showSnackbar(errorDescription)
-                            }
-                        )
-                } else {
-                    val helpTitle = "Reading exercise is not possible"
-                    val helpMessage = "Either device has no exercise entries or you haven't list them yet. Please, create an exercise or use the \"LIST EXERCISES\" " +
-                            "button to list exercises on device."
-                    showDialog(helpTitle, helpMessage)
-                }
-            } else {
-                Log.d(TAG, "Reading of exercise is in progress at the moment.")
-            }
+        removeExerciseButton.setOnClickListener{
+            //delete
+            val intent = Intent(this, DeleteExeActivity::class.java)
+            intent.putExtra("email", email)
+            startActivity(intent)
         }
 
-        removeExerciseButton.setOnClickListener {
-            val isDisposed = removeExerciseDisposable?.isDisposed ?: true
-            if (isDisposed) {
-                if (exerciseEntries.isNotEmpty()) {
-                    // just for the example purpose remove the entry which is first on the exerciseEntries list
-                    val entry = exerciseEntries.first()
-                    removeExerciseDisposable = api.removeExercise(h10Id, entry)
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(
-                            {
-                                exerciseEntries.remove(entry)
-                                val exerciseRemovedOk = "Exercise with id:${entry.identifier} successfully removed"
-                                Log.d(TAG, exerciseRemovedOk)
-                                showSnackbar(exerciseRemovedOk)
-                            },
-                            { error: Throwable ->
-                                val exerciseRemoveFailed = "Exercise with id:${entry.identifier} remove failed: $error"
-                                Log.w(TAG, exerciseRemoveFailed)
-                                showSnackbar(exerciseRemoveFailed)
-                            }
-                        )
-                } else {
-                    val helpTitle = "Removing exercise is not possible"
-                    val helpMessage = "Either device has no exercise entries or you haven't list them yet. Please, create an exercise or use the \"LIST EXERCISES\" button to list exercises on device"
-                    showDialog(helpTitle, helpMessage)
-                }
-            } else {
-                Log.d(TAG, "Removing of exercise is in progress at the moment.")
-            }
+//        listExercisesButton.setOnClickListener {
+//            val isDisposed = listExercisesDisposable?.isDisposed ?: true
+//            if (isDisposed) {
+//                exerciseEntries.clear()
+//                listExercisesDisposable = api.listExercises(h10Id)
+//                    .observeOn(AndroidSchedulers.mainThread())
+//                    .subscribe(
+//                        { polarExerciseEntry: PolarExerciseEntry ->
+//                            Log.d(TAG, "next: ${polarExerciseEntry.date} path: ${polarExerciseEntry.path} id: ${polarExerciseEntry.identifier}")
+//                            exerciseEntries.add(polarExerciseEntry)
+//                        },
+//                        { error: Throwable ->
+//                            val errorDescription = "Failed to list exercises. Reason: $error"
+//                            Log.w(TAG, errorDescription)
+//                            showSnackbar(errorDescription)
+//                        },
+//                        {
+//                            val completedOk = "Exercise listing completed. Listed ${exerciseEntries.count()} exercises on device $h10Id."
+//                            Log.d(TAG, completedOk)
+//                            showSnackbar(completedOk)
+//                        }
+//                    )
+//            } else {
+//                Log.d(TAG, "Listing of exercise entries is in progress at the moment.")
+//            }
+//        }
+//
+//        fetchExerciseButton.setOnClickListener {
+//            val isDisposed = fetchExerciseDisposable?.isDisposed ?: true
+//            if (isDisposed) {
+//                if (exerciseEntries.isNotEmpty()) {
+//                    toggleButtonDown(fetchExerciseButton, R.string.reading_exercise)
+//                    // just for the example purpose read the entry which is first on the exerciseEntries list
+//                    fetchExerciseDisposable = api.fetchExercise(h10Id, exerciseEntries.first())
+//                        .observeOn(AndroidSchedulers.mainThread())
+//                        .doFinally {
+//                            toggleButtonUp(fetchExerciseButton, R.string.read_exercise)
+//                        }
+//                        .subscribe(
+//                            { polarExerciseData: PolarExerciseData ->
+//                                Log.d(TAG, "Exercise data count: ${polarExerciseData.hrSamples.size} samples: ${polarExerciseData.hrSamples}")
+//                                var onComplete = "Exercise has ${polarExerciseData.hrSamples.size} hr samples.\n\n"
+//                                if (polarExerciseData.hrSamples.size >= 3)
+//                                    onComplete += "HR data {${polarExerciseData.hrSamples[0]}, ${polarExerciseData.hrSamples[1]}, ${polarExerciseData.hrSamples[2]} ...}"
+//                                showDialog("Exercise data read", onComplete)
+//                            },
+//                            { error: Throwable ->
+//                                val errorDescription = "Failed to read exercise. Reason: $error"
+//                                Log.e(TAG, errorDescription)
+//                                showSnackbar(errorDescription)
+//                            }
+//                        )
+//                } else {
+//                    val helpTitle = "Reading exercise is not possible"
+//                    val helpMessage = "Either device has no exercise entries or you haven't list them yet. Please, create an exercise or use the \"LIST EXERCISES\" " +
+//                            "button to list exercises on device."
+//                    showDialog(helpTitle, helpMessage)
+//                }
+//            } else {
+//                Log.d(TAG, "Reading of exercise is in progress at the moment.")
+//            }
+//        }
+//
+//        removeExerciseButton.setOnClickListener {
+//            val isDisposed = removeExerciseDisposable?.isDisposed ?: true
+//            if (isDisposed) {
+//                if (exerciseEntries.isNotEmpty()) {
+//                    // just for the example purpose remove the entry which is first on the exerciseEntries list
+//                    val entry = exerciseEntries.first()
+//                    removeExerciseDisposable = api.removeExercise(h10Id, entry)
+//                        .observeOn(AndroidSchedulers.mainThread())
+//                        .subscribe(
+//                            {
+//                                exerciseEntries.remove(entry)
+//                                val exerciseRemovedOk = "Exercise with id:${entry.identifier} successfully removed"
+//                                Log.d(TAG, exerciseRemovedOk)
+//                                showSnackbar(exerciseRemovedOk)
+//                            },
+//                            { error: Throwable ->
+//                                val exerciseRemoveFailed = "Exercise with id:${entry.identifier} remove failed: $error"
+//                                Log.w(TAG, exerciseRemoveFailed)
+//                                showSnackbar(exerciseRemoveFailed)
+//                            }
+//                        )
+//                } else {
+//                    val helpTitle = "Removing exercise is not possible"
+//                    val helpMessage = "Either device has no exercise entries or you haven't list them yet. Please, create an exercise or use the \"LIST EXERCISES\" button to list exercises on device"
+//                    showDialog(helpTitle, helpMessage)
+//                }
+//            } else {
+//                Log.d(TAG, "Removing of exercise is in progress at the moment.")
+//            }
+//        }
+//
+//        startH10RecordingButton.setOnClickListener {
+//            val isDisposed = recordingStartStopDisposable?.isDisposed ?: true
+//            if (isDisposed) {
+//                val recordIdentifier = "TEST_APP_ID"
+//                recordingStartStopDisposable = api.startRecording(h10Id, recordIdentifier, PolarH10OfflineExerciseApi.RecordingInterval.INTERVAL_5S, PolarH10OfflineExerciseApi.SampleType.HR)
+//                    .observeOn(AndroidSchedulers.mainThread())
+//                    .subscribe(
+//                        {
+//                            val recordingStartOk = "Recording started with id $recordIdentifier"
+//                            Log.d(TAG, recordingStartOk)
+//                            showSnackbar(recordingStartOk)
+//                        },
+//                        { error: Throwable ->
+//                            val title = "Recording start failed with id $recordIdentifier"
+//                            val message = "Possible reasons are, the recording is already started on the device or there is exercise recorded on H10. " +
+//                                    "H10 can have one recording in the memory at the time.\n\n" +
+//                                    "Detailed Reason: $error"
+//                            Log.e(TAG, "Recording start failed with id $recordIdentifier. Reason: $error")
+//                            showDialog(title, message)
+//                        }
+//                    )
+//            } else {
+//                Log.d(TAG, "Recording start or stop request is already in progress at the moment.")
+//            }
+//        }
+//
+//        stopH10RecordingButton.setOnClickListener {
+//            val isDisposed = recordingStartStopDisposable?.isDisposed ?: true
+//            if (isDisposed) {
+//                recordingStartStopDisposable = api.stopRecording(h10Id)
+//                    .observeOn(AndroidSchedulers.mainThread())
+//                    .subscribe(
+//                        {
+//                            val recordingStopOk = "Recording stopped"
+//                            Log.d(TAG, recordingStopOk)
+//                            showSnackbar(recordingStopOk)
+//                        },
+//                        { error: Throwable ->
+//                            val recordingStopError = "Recording stop failed. Reason: $error"
+//                            Log.e(TAG, recordingStopError)
+//                            showSnackbar(recordingStopError)
+//                        }
+//                    )
+//            } else {
+//                Log.d(TAG, "Recording start or stop request is already in progress at the moment.")
+//            }
+//        }
+//
+//        readH10RecordingStatusButton.setOnClickListener {
+//            val isDisposed = recordingStatusReadDisposable?.isDisposed ?: true
+//            if (isDisposed) {
+//                recordingStatusReadDisposable = api.requestRecordingStatus(h10Id)
+//                    .observeOn(AndroidSchedulers.mainThread())
+//                    .subscribe(
+//                        { pair: Pair<Boolean, String> ->
+//                            val recordingOn = pair.first
+//                            val recordingId = pair.second
+//
+//                            val recordingStatus = if (!recordingOn && recordingId.isEmpty()) {
+//                                "H10 Recording is OFF"
+//                            } else if (!recordingOn && recordingId.isNotEmpty()) {
+//                                "H10 Recording is OFF.\n\n" +
+//                                        "Exercise id $recordingId is currently found on H10 memory"
+//                            } else if (recordingOn && recordingId.isNotEmpty()) {
+//                                "H10 Recording is ON.\n\n" +
+//                                        "Exercise id $recordingId recording ongoing"
+//                            } else if (recordingOn && recordingId.isEmpty()) {
+//                                // This state is undefined. If recording is currently ongoing the H10 must return id of the recording
+//                                "H10 Recording state UNDEFINED"
+//                            } else {
+//                                // This state is unreachable and should never happen
+//                                "H10 recording state ERROR"
+//                            }
+//                            Log.d(TAG, recordingStatus)
+//                            showDialog("Recording status", recordingStatus)
+//                        },
+//                        { error: Throwable ->
+//                            val recordingStatusReadError = "Recording status read failed. Reason: $error"
+//                            Log.e(TAG, recordingStatusReadError)
+//                            showSnackbar(recordingStatusReadError)
+//                        }
+//                    )
+//            } else {
+//                Log.d(TAG, "Recording status request is already in progress at the moment.")
+//            }
+//        }
+
+        graphicButton.setOnClickListener {
+            val intent = Intent(this, DayHActivity::class.java)
+            intent.putExtra("email", email)
+            startActivity(intent)
         }
 
-        startH10RecordingButton.setOnClickListener {
-            val isDisposed = recordingStartStopDisposable?.isDisposed ?: true
-            if (isDisposed) {
-                val recordIdentifier = "TEST_APP_ID"
-                recordingStartStopDisposable = api.startRecording(h10Id, recordIdentifier, PolarH10OfflineExerciseApi.RecordingInterval.INTERVAL_1S, PolarH10OfflineExerciseApi.SampleType.HR)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(
-                        {
-                            val recordingStartOk = "Recording started with id $recordIdentifier"
-                            Log.d(TAG, recordingStartOk)
-                            showSnackbar(recordingStartOk)
-                        },
-                        { error: Throwable ->
-                            val title = "Recording start failed with id $recordIdentifier"
-                            val message = "Possible reasons are, the recording is already started on the device or there is exercise recorded on H10. " +
-                                    "H10 can have one recording in the memory at the time.\n\n" +
-                                    "Detailed Reason: $error"
-                            Log.e(TAG, "Recording start failed with id $recordIdentifier. Reason: $error")
-                            showDialog(title, message)
-                        }
-                    )
-            } else {
-                Log.d(TAG, "Recording start or stop request is already in progress at the moment.")
-            }
-        }
-
-        stopH10RecordingButton.setOnClickListener {
-            val isDisposed = recordingStartStopDisposable?.isDisposed ?: true
-            if (isDisposed) {
-                recordingStartStopDisposable = api.stopRecording(h10Id)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(
-                        {
-                            val recordingStopOk = "Recording stopped"
-                            Log.d(TAG, recordingStopOk)
-                            showSnackbar(recordingStopOk)
-                        },
-                        { error: Throwable ->
-                            val recordingStopError = "Recording stop failed. Reason: $error"
-                            Log.e(TAG, recordingStopError)
-                            showSnackbar(recordingStopError)
-                        }
-                    )
-            } else {
-                Log.d(TAG, "Recording start or stop request is already in progress at the moment.")
-            }
-        }
-
-        readH10RecordingStatusButton.setOnClickListener {
-            val isDisposed = recordingStatusReadDisposable?.isDisposed ?: true
-            if (isDisposed) {
-                recordingStatusReadDisposable = api.requestRecordingStatus(h10Id)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(
-                        { pair: Pair<Boolean, String> ->
-                            val recordingOn = pair.first
-                            val recordingId = pair.second
-
-                            val recordingStatus = if (!recordingOn && recordingId.isEmpty()) {
-                                "H10 Recording is OFF"
-                            } else if (!recordingOn && recordingId.isNotEmpty()) {
-                                "H10 Recording is OFF.\n\n" +
-                                        "Exercise id $recordingId is currently found on H10 memory"
-                            } else if (recordingOn && recordingId.isNotEmpty()) {
-                                "H10 Recording is ON.\n\n" +
-                                        "Exercise id $recordingId recording ongoing"
-                            } else if (recordingOn && recordingId.isEmpty()) {
-                                // This state is undefined. If recording is currently ongoing the H10 must return id of the recording
-                                "H10 Recording state UNDEFINED"
-                            } else {
-                                // This state is unreachable and should never happen
-                                "H10 recording state ERROR"
-                            }
-                            Log.d(TAG, recordingStatus)
-                            showDialog("Recording status", recordingStatus)
-                        },
-                        { error: Throwable ->
-                            val recordingStatusReadError = "Recording status read failed. Reason: $error"
-                            Log.e(TAG, recordingStatusReadError)
-                            showSnackbar(recordingStatusReadError)
-                        }
-                    )
-            } else {
-                Log.d(TAG, "Recording status request is already in progress at the moment.")
-            }
-        }
-
-        setTimeButton.setOnClickListener {
-            val calendar = Calendar.getInstance()
-            calendar.time = Date()
-            api.setLocalTime(h10Id, calendar)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    {
-                        val timeSetString = "time ${calendar.time} set to device"
-                        Log.d(TAG, timeSetString)
-                        showToast(timeSetString)
-                    },
-                    { error: Throwable -> Log.e(TAG, "set time failed: $error") }
-                )
-        }
-
-        getTimeButton.setOnClickListener {
-            api.getLocalTime(h10Id)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    { calendar ->
-                        val timeGetString = "${calendar.time} read from the device"
-                        Log.d(TAG, timeGetString)
-                        showToast(timeGetString)
-
-                    },
-                    { error: Throwable -> Log.e(TAG, "get time failed: $error") }
-                )
-        }
+//        setTimeButton.setOnClickListener {
+//            val calendar = Calendar.getInstance()
+//            calendar.time = Date()
+//            api.setLocalTime(h10Id, calendar)
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(
+//                    {
+//                        val timeSetString = "time ${calendar.time} set to device"
+//                        Log.d(TAG, timeSetString)
+//                        showToast(timeSetString)
+//                    },
+//                    { error: Throwable -> Log.e(TAG, "set time failed: $error") }
+//                )
+//        }
+//
+//        getTimeButton.setOnClickListener {
+//            api.getLocalTime(h10Id)
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(
+//                    { calendar ->
+//                        val timeGetString = "${calendar.time} read from the device"
+//                        Log.d(TAG, timeGetString)
+//                        showToast(timeGetString)
+//
+//                    },
+//                    { error: Throwable -> Log.e(TAG, "get time failed: $error") }
+//                )
+//        }
 
 
 //        listRecordingsButton.setOnClickListener {
@@ -873,18 +932,18 @@ class OptionHActivity : AppCompatActivity() {
                     )
             }
         }
-
-        getDiskSpaceButton.setOnClickListener {
-            api.getDiskSpace(h10Id)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    { diskSpace ->
-                        Log.d(TAG, "disk space: $diskSpace")
-                        showToast("Disk space left: ${diskSpace.freeSpace}/${diskSpace.totalSpace} Bytes")
-                    },
-                    { error: Throwable -> Log.e(TAG, "get disk space failed: $error") }
-                )
-        }
+//
+//        getDiskSpaceButton.setOnClickListener {
+//            api.getDiskSpace(h10Id)
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(
+//                    { diskSpace ->
+//                        Log.d(TAG, "disk space: $diskSpace")
+//                        showToast("Disk space left: ${diskSpace.freeSpace}/${diskSpace.totalSpace} Bytes")
+//                    },
+//                    { error: Throwable -> Log.e(TAG, "get disk space failed: $error") }
+//                )
+//        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -1019,15 +1078,15 @@ class OptionHActivity : AppCompatActivity() {
 //        ppgButton.isEnabled = false
 //        ppiButton.isEnabled = false
         listExercisesButton.isEnabled = false
-        fetchExerciseButton.isEnabled = false
+//        fetchExerciseButton.isEnabled = false
         removeExerciseButton.isEnabled = false
         startH10RecordingButton.isEnabled = false
-        stopH10RecordingButton.isEnabled = false
-        readH10RecordingStatusButton.isEnabled = false
-        setTimeButton.isEnabled = false
-        getTimeButton.isEnabled = false
+//        stopH10RecordingButton.isEnabled = false
+//        readH10RecordingStatusButton.isEnabled = false
+//        setTimeButton.isEnabled = false
+//        getTimeButton.isEnabled = false
         toggleSdkModeButton.isEnabled = false
-        getDiskSpaceButton.isEnabled = false
+//        getDiskSpaceButton.isEnabled = false
 //        //Verity Sense recording buttons
 //        listRecordingsButton.isEnabled = false
 //        startRecordingButton.isEnabled = false
@@ -1051,15 +1110,15 @@ class OptionHActivity : AppCompatActivity() {
 //        ppgButton.isEnabled = true
 //        ppiButton.isEnabled = true
         listExercisesButton.isEnabled = true
-        fetchExerciseButton.isEnabled = true
+//        fetchExerciseButton.isEnabled = true
         removeExerciseButton.isEnabled = true
         startH10RecordingButton.isEnabled = true
-        stopH10RecordingButton.isEnabled = true
-        readH10RecordingStatusButton.isEnabled = true
-        setTimeButton.isEnabled = true
-        getTimeButton.isEnabled = true
+//        stopH10RecordingButton.isEnabled = true
+//        readH10RecordingStatusButton.isEnabled = true
+//        setTimeButton.isEnabled = true
+//        getTimeButton.isEnabled = true
         toggleSdkModeButton.isEnabled = true
-        getDiskSpaceButton.isEnabled = true
+//        getDiskSpaceButton.isEnabled = true
 //        //Verity Sense recording buttons
 //        listRecordingsButton.isEnabled = true
 //        startRecordingButton.isEnabled = true
@@ -1075,5 +1134,13 @@ class OptionHActivity : AppCompatActivity() {
 //        magDisposable?.dispose()
 //        ppgDisposable?.dispose()
 //        ppgDisposable?.dispose()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun nowTime(): String {
+        val now = LocalDateTime.now()
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")
+        val formattedDateTime = now.format(formatter)
+        return formattedDateTime.toString()
     }
 }
