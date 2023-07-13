@@ -15,6 +15,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
+
 class SeeGrapVsActivity : AppCompatActivity() {
 
     private lateinit var chart1: LineChart
@@ -65,32 +66,38 @@ class SeeGrapVsActivity : AppCompatActivity() {
         grafppg = findViewById(R.id.ppg)
 
         array.sortBy { stringToFloat(it.hour) }
-        val entries1 = array.map {
+        val filterArray1 = array.filter { it.heartRate != "0" }
+        val entries1 = filterArray1.map {
             Entry(stringToFloat(it.hour), it.heartRate.toFloat())
         }
 
         array.sortBy { stringToFloat(it.hour) }
-        val entries2 = array.map {
+        val filterArray2 = array.filter { it.ecg != "0" }
+        val entries2 = filterArray2.map {
             Entry(stringToFloat(it.hour), it.ecg.toFloat())
         }
 
         array.sortBy { stringToFloat(it.hour) }
-        val entries3 = array.map {
+        val filterArray3 = array.filter { it.acc != "0" }
+        val entries3 = filterArray3.map {
             Entry(stringToFloat(it.hour), it.acc.toFloat())
         }
 
         array.sortBy { stringToFloat(it.hour) }
-        val entries4 = array.map {
+        val filterArray4 = array.filter { it.gyro != "0" }
+        val entries4 = filterArray4.map {
             Entry(stringToFloat(it.hour), it.gyro.toFloat())
         }
 
         array.sortBy { stringToFloat(it.hour) }
-        val entries5 = array.map {
+        val filterArray5 = array.filter { it.magnet != "0" }
+        val entries5 = filterArray5.map {
             Entry(stringToFloat(it.hour), it.magnet.toFloat())
         }
 
         array.sortBy { stringToFloat(it.hour) }
-        val entries6 = array.map {
+        val filterArray6 = array.filter { it.ppi != "0" }
+        val entries6 = filterArray6.map {
             Entry(stringToFloat(it.hour), it.ppi.toFloat())
         }
 
@@ -228,7 +235,7 @@ class SeeGrapVsActivity : AppCompatActivity() {
         val timeArray = timeString.split(":")
         val hours = timeArray[0].toFloat()
         val minutes = timeArray[1].toFloat() / 100
-        val seconds = timeArray[2].toFloat() / 10000
+        val seconds = ((timeArray[2].toFloat() / 10000) + 0.005).toFloat()
         val totalSeconds = hours + minutes + seconds
         return totalSeconds
     }

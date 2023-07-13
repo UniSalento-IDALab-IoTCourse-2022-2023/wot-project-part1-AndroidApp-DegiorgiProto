@@ -30,6 +30,7 @@ import io.reactivex.rxjava3.disposables.Disposable
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import kotlin.math.sqrt
 
 class OptionVsActivity : AppCompatActivity() {
     companion object {
@@ -58,9 +59,9 @@ class OptionVsActivity : AppCompatActivity() {
         )
     }
 
-//    private lateinit var broadcastDisposable: Disposable
-//    private var scanDisposable: Disposable? = null
-//    private var autoConnectDisposable: Disposable? = null
+    private lateinit var broadcastDisposable: Disposable
+    private var scanDisposable: Disposable? = null
+    private var autoConnectDisposable: Disposable? = null
     private var hrDisposable: Disposable? = null
     private var ecgDisposable: Disposable? = null
     private var accDisposable: Disposable? = null
@@ -69,16 +70,15 @@ class OptionVsActivity : AppCompatActivity() {
     private var ppgDisposable: Disposable? = null
     private var ppiDisposable: Disposable? = null
     private var sdkModeEnableDisposable: Disposable? = null
-//    private var recordingStartStopDisposable: Disposable? = null
-//    private var recordingStatusReadDisposable: Disposable? = null
-//    private var listExercisesDisposable: Disposable? = null
-//    private var fetchExerciseDisposable: Disposable? = null
-//    private var removeExerciseDisposable: Disposable? = null
+
 
     private var sdkModeEnabledStatus = false
     private var deviceConnected = false
     private var bluetoothEnabled = false
-//    private var exerciseEntries: MutableList<PolarExerciseEntry> = mutableListOf()
+
+    private lateinit var broadcastButton: Button
+    private lateinit var autoConnectButton: Button
+    private lateinit var scanButton: Button
 
     private lateinit var connectvs: Button
     private lateinit var hrButton: Button
@@ -90,23 +90,9 @@ class OptionVsActivity : AppCompatActivity() {
     private lateinit var ppiButton: Button
 
     private lateinit var graphicButton: Button
-//    private lateinit var writeExerciseButton: Button
-//
-//    private lateinit var listExercisesButton: Button
-//    private lateinit var fetchExerciseButton: Button
-//    private lateinit var removeExerciseButton: Button
-//    private lateinit var setTimeButton: Button
-//    private lateinit var getTimeButton: Button
-    private lateinit var toggleSdkModeButton: Button
-//    private lateinit var getDiskSpaceButton: Button
 
-    //Verity Sense offline recording use
-//    private lateinit var listRecordingsButton: Button
-//    private lateinit var startRecordingButton: Button
-//    private lateinit var stopRecordingButton: Button
-//    private lateinit var downloadRecordingButton: Button
-//    private lateinit var deleteRecordingButton: Button
-//    private val entryCache: MutableMap<String, MutableList<PolarOfflineRecordingEntry>> = mutableMapOf()
+    private lateinit var toggleSdkModeButton: Button
+
     private lateinit var countDownTimer: CountDownTimer
 
     @SuppressLint("MissingInflatedId")
@@ -114,6 +100,10 @@ class OptionVsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_vs)
         Log.d(TAG, "version: " + PolarBleApiDefaultImpl.versionInfo())
+        broadcastButton = findViewById(R.id.broadcast_button)
+        autoConnectButton = findViewById(R.id.auto_connect_button)
+        scanButton = findViewById(R.id.scan_button)
+
         connectvs = findViewById(R.id.connect_vs)
         hrButton = findViewById(R.id.hr_button)
         ecgButton = findViewById(R.id.ecg_button)
@@ -124,21 +114,9 @@ class OptionVsActivity : AppCompatActivity() {
         ppiButton = findViewById(R.id.ohr_ppi_button)
 
         graphicButton = findViewById(R.id.graphics)
-//        writeExerciseButton = findViewById(R.id.write_exercises)
-//
-//        listExercisesButton = findViewById(R.id.list_exercises)
-//        fetchExerciseButton = findViewById(R.id.read_exercise)
-//        removeExerciseButton = findViewById(R.id.remove_exercise)
-//        setTimeButton = findViewById(R.id.set_time)
-//        getTimeButton = findViewById(R.id.get_time)
+
         toggleSdkModeButton = findViewById(R.id.toggle_SDK_mode)
-//        getDiskSpaceButton = findViewById(R.id.get_disk_space)
-        //Verity Sense recording buttons
-//        listRecordingsButton = findViewById(R.id.list_recordings)
-//        startRecordingButton = findViewById(R.id.start_recording)
-//        stopRecordingButton = findViewById(R.id.stop_recording)
-//        downloadRecordingButton = findViewById(R.id.download_recording)
-//        deleteRecordingButton = findViewById(R.id.delete_recording)
+
 
         val email = intent.getStringExtra("email")
 
@@ -200,6 +178,63 @@ class OptionVsActivity : AppCompatActivity() {
             }
         })
 
+        broadcastButton.setOnClickListener {
+            if (!this::broadcastDisposable.isInitialized || broadcastDisposable.isDisposed) {
+                toggleButtonDown(broadcastButton, R.string.listening_broadcast)
+                broadcastDisposable = api.startListenForPolarHrBroadcasts(null)
+                    .subscribe(
+                        { polarBroadcastData: PolarHrBroadcastData ->
+                            Log.d(TAG, "HR BROADCAST ${polarBroadcastData.polarDeviceInfo.deviceId} HR: ${polarBroadcastData.hr} batt: ${polarBroadcastData.batteryStatus}")
+                        },
+                        { error: Throwable ->
+                            toggleButtonUp(broadcastButton, R.string.listen_broadcast)
+                            Log.e(TAG, "Broadcast listener failed. Reason $error")
+                        },
+                        { Log.d(TAG, "complete") }
+                    )
+            } else {
+                toggleButtonUp(broadcastButton, R.string.listen_broadcast)
+                broadcastDisposable.dispose()
+            }
+        }
+
+
+        autoConnectButton.setOnClickListener {
+            if (autoConnectDisposable != null) {
+                autoConnectDisposable?.dispose()
+            }
+            autoConnectDisposable = api.autoConnectToDevice(-60, "180D", null)
+                .subscribe(
+                    { Log.d(TAG, "auto connect search complete") },
+                    { throwable: Throwable -> Log.e(TAG, "" + throwable.toString()) }
+                )
+        }
+
+        scanButton.setOnClickListener {
+            val isDisposed = scanDisposable?.isDisposed ?: true
+            if (isDisposed) {
+                toggleButtonDown(scanButton, R.string.scanning_devices)
+                scanDisposable = api.searchForDevice()
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                        { polarDeviceInfo: PolarDeviceInfo ->
+                            Log.d(TAG, "polar device found id: " + polarDeviceInfo.deviceId + " address: " + polarDeviceInfo.address + " rssi: " + polarDeviceInfo.rssi + " name: " + polarDeviceInfo.name + " isConnectable: " + polarDeviceInfo.isConnectable)
+                        },
+                        { error: Throwable ->
+                            toggleButtonUp(scanButton, "Scan devices")
+                            Log.e(TAG, "Device scan failed. Reason $error")
+                        },
+                        {
+                            toggleButtonUp(scanButton, "Scan devices")
+                            Log.d(TAG, "complete")
+                        }
+                    )
+            } else {
+                toggleButtonUp(scanButton, "Scan devices")
+                scanDisposable?.dispose()
+            }
+        }
+
         connectvs.text = getString(R.string.connect_to_veritysense, veritySenseId)
         connectvs.setOnClickListener {
             try {
@@ -214,7 +249,7 @@ class OptionVsActivity : AppCompatActivity() {
                 } else {
                     "connect"
                 }
-                Log.e(OptionVsActivity.TAG, "Failed to $attempt. Reason $polarInvalidArgument ")
+                Log.e(TAG, "Failed to $attempt. Reason $polarInvalidArgument ")
             }
         }
 
@@ -280,11 +315,38 @@ class OptionVsActivity : AppCompatActivity() {
                         { polarEcgData: PolarEcgData ->
                             for (data in polarEcgData.samples) {
                                 Log.d(TAG, "    yV: ${data.voltage} timeStamp: ${data.timeStamp}")
+                                val urlPost = "http://192.168.0.105:3000/aggiungiVS"
+                                val req =
+                                    "{ \"heartRate\": \"0\", \"ecg\": \"${data.voltage}\", \"acc\" : \"0\", \"gyro\" : \"0\", \"magnet\" : \"0\", \"ppg1\" : \"0\", \"ppg2\" : \"0\", \"ppg3\" : \"0\", \"ppi\" : \"0\", \"emailAddress\": \"$email\" }"
+                                Thread { myConn.post_request(urlPost, req) }.start()
+                                //Log.d(TAG, "HR     bpm: ${sample.hr} rrs: ${sample.rrsMs} rrAvailable: ${sample.rrAvailable} contactStatus: ${sample.contactStatus} contactStatusSupported: ${sample.contactStatusSupported}")
                             }
+                            ws.start()
+                            //val intent = Intent(this, MainActivity::class.java)
+                            countDownTimer = object : CountDownTimer(15000, 1000) {
+                                override fun onTick(millisUntilFinished: Long) {
+                                    // Avvia il conteggio alla rovescia
+
+                                    Log.d("TIMER", "Il timer è partito")
+                                }
+
+                                @RequiresApi(Build.VERSION_CODES.O)
+                                override fun onFinish() {
+                                    // Termina il conteggio alla rovescia e fa camminare l'immagine
+                                    Log.d("TIMER", "Il timer ha finito")
+                                    ws.sendMessage("Non misuri l'ecg del polar vs dal ${nowTime()}")
+                                    ws.disconnect()
+                                }
+                            }
+                            // Avvia il contatore
+                            countDownTimer.start()
+                            //startActivity(intent)
+
                         },
                         { error: Throwable ->
                             toggleButtonUp(ecgButton, R.string.start_ecg_stream)
                             Log.e(TAG, "ECG stream failed. Reason $error")
+                            showToast("il dispositivo Polar Verity Sense non è in grado di leggere o impostare le impostazioni per il tipo di misurazione specificato.")
                         },
                         { Log.d(TAG, "ECG stream complete") }
                     )
@@ -308,11 +370,38 @@ class OptionVsActivity : AppCompatActivity() {
                         { polarAccelerometerData: PolarAccelerometerData ->
                             for (data in polarAccelerometerData.samples) {
                                 Log.d(TAG, "ACC    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}")
+                                val acc = sqrt((((data.x)*(data.x)) + ((data.y)*(data.y)) + ((data.z)*(data.z))).toDouble())
+                                val urlPost = "http://192.168.0.105:3000/aggiungiVS"
+                                val req =
+                                    "{ \"heartRate\": \"0\", \"ecg\": \"0\", \"acc\" : \"$acc\", \"gyro\" : \"0\", \"magnet\" : \"0\", \"ppg1\" : \"0\", \"ppg2\" : \"0\", \"ppg3\" : \"0\", \"ppi\" : \"0\", \"emailAddress\": \"$email\" }"
+                                Thread { myConn.post_request(urlPost, req) }.start()
+                                //Log.d(TAG, "HR     bpm: ${sample.hr} rrs: ${sample.rrsMs} rrAvailable: ${sample.rrAvailable} contactStatus: ${sample.contactStatus} contactStatusSupported: ${sample.contactStatusSupported}")
                             }
+                            ws.start()
+                            //val intent = Intent(this, MainActivity::class.java)
+                            countDownTimer = object : CountDownTimer(15000, 1000) {
+                                override fun onTick(millisUntilFinished: Long) {
+                                    // Avvia il conteggio alla rovescia
+
+                                    Log.d("TIMER", "Il timer è partito")
+                                }
+
+                                @RequiresApi(Build.VERSION_CODES.O)
+                                override fun onFinish() {
+                                    // Termina il conteggio alla rovescia e fa camminare l'immagine
+                                    Log.d("TIMER", "Il timer ha finito")
+                                    ws.sendMessage("Non misuri l'acc del polar vs dal ${nowTime()}")
+                                    ws.disconnect()
+                                }
+                            }
+                            // Avvia il contatore
+                            countDownTimer.start()
+                            //startActivity(intent)
                         },
                         { error: Throwable ->
                             toggleButtonUp(accButton, R.string.start_acc_stream)
                             Log.e(TAG, "ACC stream failed. Reason $error")
+                            showToast("il dispositivo Polar Verity Sense non è in grado di leggere o impostare le impostazioni per il tipo di misurazione specificato.")
                         },
                         {
                             showToast("ACC stream complete")
@@ -340,11 +429,39 @@ class OptionVsActivity : AppCompatActivity() {
                             { polarGyroData: PolarGyroData ->
                                 for (data in polarGyroData.samples) {
                                     Log.d(TAG, "GYR    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}")
+                                    val gyro = sqrt((((data.x)*(data.x)) + ((data.y)*(data.y)) + ((data.z)*(data.z))).toDouble())
+
+                                    val urlPost = "http://192.168.0.105:3000/aggiungiVS"
+                                    val req =
+                                        "{ \"heartRate\": \"0\", \"ecg\": \"0\", \"acc\" : \"0\", \"gyro\" : \"$gyro\", \"magnet\" : \"0\", \"ppg1\" : \"0\", \"ppg2\" : \"0\", \"ppg3\" : \"0\", \"ppi\" : \"0\", \"emailAddress\": \"$email\" }"
+                                    Thread { myConn.post_request(urlPost, req) }.start()
                                 }
+                                ws.start()
+                                //val intent = Intent(this, MainActivity::class.java)
+                                countDownTimer = object : CountDownTimer(15000, 1000) {
+                                    override fun onTick(millisUntilFinished: Long) {
+                                        // Avvia il conteggio alla rovescia
+
+                                        Log.d("TIMER", "Il timer è partito")
+                                    }
+
+                                    @RequiresApi(Build.VERSION_CODES.O)
+                                    override fun onFinish() {
+                                        // Termina il conteggio alla rovescia e fa camminare l'immagine
+                                        Log.d("TIMER", "Il timer ha finito")
+                                        ws.sendMessage("Non usi il gyroscopio del polar vs dal ${nowTime()}")
+                                        ws.disconnect()
+                                    }
+                                }
+                                // Avvia il contatore
+                                countDownTimer.start()
+                                //startActivity(intent)
+
                             },
                             { error: Throwable ->
                                 toggleButtonUp(gyrButton, R.string.start_gyro_stream)
                                 Log.e(TAG, "GYR stream failed. Reason $error")
+                                showToast("il dispositivo Polar Verity Sense non è in grado di leggere o impostare le impostazioni per il tipo di misurazione specificato.")
                             },
                             { Log.d(TAG, "GYR stream complete") }
                         )
@@ -369,11 +486,39 @@ class OptionVsActivity : AppCompatActivity() {
                             { polarMagData: PolarMagnetometerData ->
                                 for (data in polarMagData.samples) {
                                     Log.d(TAG, "MAG    x: ${data.x} y: ${data.y} z: ${data.z} timeStamp: ${data.timeStamp}")
+                                    val mag = sqrt((((data.x)*(data.x)) + ((data.y)*(data.y)) + ((data.z)*(data.z))).toDouble())
+
+                                    val urlPost = "http://192.168.0.105:3000/aggiungiVS"
+                                    val req =
+                                        "{ \"heartRate\": \"0\", \"ecg\": \"0\", \"acc\" : \"0\", \"gyro\" : \"0\", \"magnet\" : \"$mag\", \"ppg1\" : \"0\", \"ppg2\" : \"0\", \"ppg3\" : \"0\", \"ppi\" : \"0\", \"emailAddress\": \"$email\" }"
+                                    Thread { myConn.post_request(urlPost, req) }.start()
                                 }
+                                ws.start()
+                                //val intent = Intent(this, MainActivity::class.java)
+                                countDownTimer = object : CountDownTimer(15000, 1000) {
+                                    override fun onTick(millisUntilFinished: Long) {
+                                        // Avvia il conteggio alla rovescia
+
+                                        Log.d("TIMER", "Il timer è partito")
+                                    }
+
+                                    @RequiresApi(Build.VERSION_CODES.O)
+                                    override fun onFinish() {
+                                        // Termina il conteggio alla rovescia e fa camminare l'immagine
+                                        Log.d("TIMER", "Il timer ha finito")
+                                        ws.sendMessage("Non usi il magnetometro del polar vs dal ${nowTime()}")
+                                        ws.disconnect()
+                                    }
+                                }
+                                // Avvia il contatore
+                                countDownTimer.start()
+                                //startActivity(intent)
+
                             },
                             { error: Throwable ->
                                 toggleButtonUp(magButton, R.string.start_mag_stream)
                                 Log.e(TAG, "MAGNETOMETER stream failed. Reason $error")
+                                showToast("il dispositivo Polar Verity Sense non è in grado di leggere o impostare le impostazioni per il tipo di misurazione specificato.")
                             },
                             { Log.d(TAG, "MAGNETOMETER stream complete") }
                         )
@@ -398,12 +543,39 @@ class OptionVsActivity : AppCompatActivity() {
                                 if (polarPpgData.type == PolarPpgData.PpgDataType.PPG3_AMBIENT1) {
                                     for (data in polarPpgData.samples) {
                                         Log.d(TAG, "PPG    ppg0: ${data.channelSamples[0]} ppg1: ${data.channelSamples[1]} ppg2: ${data.channelSamples[2]} ambient: ${data.channelSamples[3]} timeStamp: ${data.timeStamp}")
+
+                                        val urlPost = "http://192.168.0.105:3000/aggiungiVS"
+                                        val req =
+                                            "{ \"heartRate\": \"0\", \"ecg\": \"0\", \"acc\" : \"0\", \"gyro\" : \"0\", \"magnet\" : \"0\", \"ppg1\" : \"${data.channelSamples[0]}\", \"ppg2\" : \"${data.channelSamples[1]}\", \"ppg3\" : \"${data.channelSamples[2]}\", \"ppi\" : \"0\", \"emailAddress\": \"$email\" }"
+                                        Thread { myConn.post_request(urlPost, req) }.start()
                                     }
+                                    ws.start()
+                                    //val intent = Intent(this, MainActivity::class.java)
+                                    countDownTimer = object : CountDownTimer(15000, 1000) {
+                                        override fun onTick(millisUntilFinished: Long) {
+                                            // Avvia il conteggio alla rovescia
+
+                                            Log.d("TIMER", "Il timer è partito")
+                                        }
+
+                                        @RequiresApi(Build.VERSION_CODES.O)
+                                        override fun onFinish() {
+                                            // Termina il conteggio alla rovescia e fa camminare l'immagine
+                                            Log.d("TIMER", "Il timer ha finito")
+                                            ws.sendMessage("Non misuri il ppg del polar vs dal ${nowTime()}")
+                                            ws.disconnect()
+                                        }
+                                    }
+                                    // Avvia il contatore
+                                    countDownTimer.start()
+                                    //startActivity(intent)
+
                                 }
                             },
                             { error: Throwable ->
                                 toggleButtonUp(ppgButton, R.string.start_ppg_stream)
                                 Log.e(TAG, "PPG stream failed. Reason $error")
+                                showToast("il dispositivo Polar Verity Sense non è in grado di leggere o impostare le impostazioni per il tipo di misurazione specificato.")
                             },
                             { Log.d(TAG, "PPG stream complete") }
                         )
@@ -423,8 +595,34 @@ class OptionVsActivity : AppCompatActivity() {
                     .subscribe(
                         { ppiData: PolarPpiData ->
                             for (sample in ppiData.samples) {
-                                Log.d(TAG, "PPI    ppi: ${sample.ppi} blocker: ${sample.blockerBit} errorEstimate: ${sample.errorEstimate}")
+                                Log.d(TAG + "ppi", "PPI    ppi: ${sample.ppi} blocker: ${sample.blockerBit} errorEstimate: ${sample.errorEstimate}")
+
+                                val urlPost = "http://192.168.0.105:3000/aggiungiVS"
+                                val req =
+                                    "{ \"heartRate\": \"0\", \"ecg\": \"0\", \"acc\" : \"0\", \"gyro\" : \"0\", \"magnet\" : \"0\", \"ppg1\" : \"0\", \"ppg2\" : \"0\", \"ppg3\" : \"0\", \"ppi\" : \"${sample.ppi}\", \"emailAddress\": \"$email\" }"
+                                Thread { myConn.post_request(urlPost, req) }.start()
+                                //Log.d(TAG, "HR     bpm: ${sample.hr} rrs: ${sample.rrsMs} rrAvailable: ${sample.rrAvailable} contactStatus: ${sample.contactStatus} contactStatusSupported: ${sample.contactStatusSupported}")
                             }
+                            ws.start()
+                            //val intent = Intent(this, MainActivity::class.java)
+                            countDownTimer = object : CountDownTimer(15000, 1000) {
+                                override fun onTick(millisUntilFinished: Long) {
+                                    // Avvia il conteggio alla rovescia
+
+                                    Log.d("TIMER", "Il timer è partito")
+                                }
+
+                                @RequiresApi(Build.VERSION_CODES.O)
+                                override fun onFinish() {
+                                    // Termina il conteggio alla rovescia e fa camminare l'immagine
+                                    Log.d("TIMER", "Il timer ha finito")
+                                    ws.sendMessage("Non misuri il ppi del polar vs dal ${nowTime()}")
+                                    ws.disconnect()
+                                }
+                            }
+                            // Avvia il contatore
+                            countDownTimer.start()
+                            //startActivity(intent)
                         },
                         { error: Throwable ->
                             toggleButtonUp(ppiButton, R.string.start_ppi_stream)
@@ -445,167 +643,7 @@ class OptionVsActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-//        setTimeButton.setOnClickListener {
-//            val calendar = Calendar.getInstance()
-//            calendar.time = Date()
-//            api.setLocalTime(veritySenseId, calendar)
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe(
-//                    {
-//                        val timeSetString = "time ${calendar.time} set to device"
-//                        Log.d(TAG, timeSetString)
-//                        showToast(timeSetString)
-//                    },
-//                    { error: Throwable -> Log.e(TAG, "set time failed: $error") }
-//                )
-//        }
-//
-//        getTimeButton.setOnClickListener {
-//            api.getLocalTime(veritySenseId)
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe(
-//                    { calendar ->
-//                        val timeGetString = "${calendar.time} read from the device"
-//                        Log.d(TAG, timeGetString)
-//                        showToast(timeGetString)
-//
-//                    },
-//                    { error: Throwable -> Log.e(TAG, "get time failed: $error") }
-//                )
-//        }
-//
-//
-//        listRecordingsButton.setOnClickListener {
-//            api.listOfflineRecordings(veritySenseId)
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .doOnSubscribe {
-//                    entryCache[veritySenseId] = mutableListOf()
-//                }
-//                .map {
-//                    entryCache[veritySenseId]?.add(it)
-//                    it
-//                }
-//                .subscribe(
-//                    { polarOfflineRecordingEntry: PolarOfflineRecordingEntry ->
-//                        Log.d(
-//                            TAG,
-//                            "next: ${polarOfflineRecordingEntry.date} path: ${polarOfflineRecordingEntry.path} size: ${polarOfflineRecordingEntry.size}"
-//                        )
-//                    },
-//                    { error: Throwable -> Log.e(TAG, "Failed to list recordings: $error") },
-//                    { Log.d(TAG, "list recordings complete") }
-//                )
-//        }
-//
-//        startRecordingButton.setOnClickListener {
-//            //Example of starting ACC offline recording
-//            Log.d(TAG, "Starts ACC recording")
-//            val settings: MutableMap<PolarSensorSetting.SettingType, Int> = mutableMapOf()
-//            settings[PolarSensorSetting.SettingType.SAMPLE_RATE] = 52
-//            settings[PolarSensorSetting.SettingType.RESOLUTION] = 16
-//            settings[PolarSensorSetting.SettingType.RANGE] = 8
-//            settings[PolarSensorSetting.SettingType.CHANNELS] = 3
-//            //Using a secret key managed by your own.
-//            //  You can use a different key to each start recording calls.
-//            //  When using key at start recording, it is also needed for the recording download, otherwise could not be decrypted
-//            val yourSecret = PolarRecordingSecret(
-//                byteArrayOf(
-//                    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
-//                    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07
-//                )
-//            )
-//            api.startOfflineRecording(veritySenseId, PolarBleApi.PolarDeviceDataType.ACC, PolarSensorSetting(settings.toMap()), yourSecret)
-//                //Without a secret key
-//                //api.startOfflineRecording(deviceId, PolarBleApi.PolarDeviceDataType.ACC, PolarSensorSetting(settings.toMap()))
-//                .subscribe(
-//                    { Log.d(TAG, "start offline recording completed") },
-//                    { throwable: Throwable -> Log.e(TAG, "" + throwable.toString()) }
-//                )
-//        }
-//
-//        stopRecordingButton.setOnClickListener {
-//            //Example of stopping ACC offline recording
-//            Log.d(TAG, "Stops ACC recording")
-//            api.stopOfflineRecording(veritySenseId, PolarBleApi.PolarDeviceDataType.ACC)
-//                .subscribe(
-//                    { Log.d(TAG, "stop offline recording completed") },
-//                    { throwable: Throwable -> Log.e(TAG, "" + throwable.toString()) }
-//                )
-//        }
-//
-//        downloadRecordingButton.setOnClickListener {
-//            //Example of one offline recording download
-//            //NOTE: For this example you need to click on listRecordingsButton to have files entry (entryCache) up to date
-//            Log.d(TAG, "Searching to recording to download... ")
-//            //Get first entry for testing download
-//            val offlineRecEntry = entryCache[veritySenseId]?.firstOrNull()
-//            offlineRecEntry?.let { offlineEntry ->
-//                try {
-//                    //Using a secret key managed by your own.
-//                    //  You can use a different key to each start recording calls.
-//                    //  When using key at start recording, it is also needed for the recording download, otherwise could not be decrypted
-//                    val yourSecret = PolarRecordingSecret(
-//                        byteArrayOf(
-//                            0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
-//                            0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07
-//                        )
-//                    )
-//                    api.getOfflineRecord(veritySenseId, offlineEntry, yourSecret)
-//                        //Not using a secret key
-//                        //api.getOfflineRecord(deviceId, offlineEntry)
-//                        .subscribe(
-//                            {
-//                                Log.d(TAG, "Recording ${offlineEntry.path} downloaded. Size: ${offlineEntry.size}")
-//                                when (it) {
-//                                    is PolarOfflineRecordingData.AccOfflineRecording -> {
-//                                        Log.d(TAG, "ACC Recording started at ${it.startTime}")
-//                                        for (sample in it.data.samples) {
-//                                            Log.d(TAG, "ACC data: time: ${sample.timeStamp} X: ${sample.x} Y: ${sample.y} Z: ${sample.z}")
-//                                        }
-//                                    }
-////                      is PolarOfflineRecordingData.GyroOfflineRecording -> { }
-////                      is PolarOfflineRecordingData.MagOfflineRecording -> { }
-////                      ...
-//                                    else -> {
-//                                        Log.d(TAG, "Recording type is not yet implemented")
-//                                    }
-//                                }
-//                            },
-//                            { throwable: Throwable -> Log.e(TAG, "" + throwable.toString()) }
-//                        )
-//                } catch (e: Exception) {
-//                    Log.e(TAG, "Get offline recording fetch failed on entry ...", e)
-//                }
-//            }
-//        }
-//
-//        deleteRecordingButton.setOnClickListener {
-//            //Example of one offline recording deletion
-//            //NOTE: For this example you need to click on listRecordingsButton to have files entry (entryCache) up to date
-//            Log.d(TAG, "Searching to recording to delete... ")
-//            //Get first entry for testing deletion
-//            val offlineRecEntry = entryCache[veritySenseId]?.firstOrNull()
-//            offlineRecEntry?.let { offlineEntry ->
-//                try {
-//                    api.removeOfflineRecord(veritySenseId, offlineEntry)
-//                        .observeOn(AndroidSchedulers.mainThread())
-//                        .subscribe(
-//                            {
-//                                Log.d(TAG, "Recording file deleted")
-//                            },
-//                            { error ->
-//                                val errorString = "Recording file deletion failed: $error"
-//                                showToast(errorString)
-//                                Log.e(TAG, errorString)
-//                            }
-//                        )
-//
-//                } catch (e: Exception) {
-//                    Log.e(TAG, "Delete offline recording failed on entry ...", e)
-//                }
-//            }
-//        }
-//
+
         toggleSdkModeButton.setOnClickListener {
             toggleSdkModeButton.isEnabled = false
             if (!sdkModeEnabledStatus) {
@@ -649,17 +687,6 @@ class OptionVsActivity : AppCompatActivity() {
             }
         }
 
-//        getDiskSpaceButton.setOnClickListener {
-//            api.getDiskSpace(veritySenseId)
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe(
-//                    { diskSpace ->
-//                        Log.d(TAG, "disk space: $diskSpace")
-//                        showToast("Disk space left: ${diskSpace.freeSpace}/${diskSpace.totalSpace} Bytes")
-//                    },
-//                    { error: Throwable -> Log.e(TAG, "get disk space failed: $error") }
-//                )
-//        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -780,61 +807,32 @@ class OptionVsActivity : AppCompatActivity() {
     }
 
     private fun disableAllButtons() {
-//        broadcastButton.isEnabled = false
+        broadcastButton.isEnabled = false
         connectvs.isEnabled = false
-//        autoConnectButton.isEnabled = false
-//        scanButton.isEnabled = false
+        autoConnectButton.isEnabled = false
+        scanButton.isEnabled = false
         ecgButton.isEnabled = false
         accButton.isEnabled = false
         gyrButton.isEnabled = false
         magButton.isEnabled = false
         ppgButton.isEnabled = false
         ppiButton.isEnabled = false
-//        listExercisesButton.isEnabled = false
-//        fetchExerciseButton.isEnabled = false
-//        removeExerciseButton.isEnabled = false
-//        startH10RecordingButton.isEnabled = false
-//        stopH10RecordingButton.isEnabled = false
-//        readH10RecordingStatusButton.isEnabled = false
-//        setTimeButton.isEnabled = false
-//        getTimeButton.isEnabled = false
         toggleSdkModeButton.isEnabled = false
-//        getDiskSpaceButton.isEnabled = false
-        //Verity Sense recording buttons
-//        listRecordingsButton.isEnabled = false
-//        startRecordingButton.isEnabled = false
-//        stopRecordingButton.isEnabled = false
-//        downloadRecordingButton.isEnabled = false
-//        deleteRecordingButton.isEnabled = false
     }
 
     private fun enableAllButtons() {
-//        broadcastButton.isEnabled = true
+        broadcastButton.isEnabled = true
         connectvs.isEnabled = true
-//        autoConnectButton.isEnabled = true
-//        scanButton.isEnabled = true
+        autoConnectButton.isEnabled = true
+        scanButton.isEnabled = true
         ecgButton.isEnabled = true
         accButton.isEnabled = true
         gyrButton.isEnabled = true
         magButton.isEnabled = true
         ppgButton.isEnabled = true
         ppiButton.isEnabled = true
-//        listExercisesButton.isEnabled = true
-//        fetchExerciseButton.isEnabled = true
-//        removeExerciseButton.isEnabled = true
-//        startH10RecordingButton.isEnabled = true
-//        stopH10RecordingButton.isEnabled = true
-//        readH10RecordingStatusButton.isEnabled = true
-//        setTimeButton.isEnabled = true
-//        getTimeButton.isEnabled = true
+
         toggleSdkModeButton.isEnabled = true
-//        getDiskSpaceButton.isEnabled = true
-        //Verity Sense recording buttons
-//        listRecordingsButton.isEnabled = true
-//        startRecordingButton.isEnabled = true
-//        stopRecordingButton.isEnabled = true
-//        downloadRecordingButton.isEnabled = true
-//        deleteRecordingButton.isEnabled = true
     }
 
     private fun disposeAllStreams() {

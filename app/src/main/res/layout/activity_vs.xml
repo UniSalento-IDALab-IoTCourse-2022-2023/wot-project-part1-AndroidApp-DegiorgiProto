@@ -12,6 +12,24 @@
         android:orientation="vertical">
 
         <Button
+            android:id="@+id/broadcast_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/listen_broadcast" />
+
+        <Button
+            android:id="@+id/auto_connect_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/auto_connect_toggle" />
+
+        <Button
+            android:id="@+id/scan_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/scan_devices" />
+
+        <Button
             android:id="@+id/connect_vs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -83,104 +101,6 @@
             android:layout_marginBottom="2dp"
             android:background="@android:color/white" />
 
-<!--        <Button-->
-<!--            android:id="@+id/write_exercises"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="@string/scrivi_exercises" />-->
-
-<!--        <Button-->
-<!--            android:id="@+id/list_exercises"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="@string/list_exercises" />-->
-
-<!--        <Button-->
-<!--            android:id="@+id/read_exercise"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="@string/read_exercise" />-->
-
-<!--        <Button-->
-<!--            android:id="@+id/remove_exercise"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="@string/remove_exercise" />-->
-
-<!--        <View-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="1dp"-->
-<!--            android:layout_marginStart="10dp"-->
-<!--            android:layout_marginTop="2dp"-->
-<!--            android:layout_marginEnd="10dp"-->
-<!--            android:layout_marginBottom="2dp"-->
-<!--            android:background="@android:color/white" />-->
-
-<!--        <Button-->
-<!--            android:id="@+id/set_time"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="@string/set_time" />-->
-
-<!--        <Button-->
-<!--            android:id="@+id/get_time"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="@string/get_time" />-->
-
-<!--        <Button-->
-<!--            android:id="@+id/get_disk_space"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="@string/get_disk_space" />-->
-
-<!--        <View-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="1dp"-->
-<!--            android:layout_marginStart="10dp"-->
-<!--            android:layout_marginTop="2dp"-->
-<!--            android:layout_marginEnd="10dp"-->
-<!--            android:layout_marginBottom="2dp"-->
-<!--            android:background="@android:color/white" />-->
-
-<!--        <Button-->
-<!--            android:id="@+id/list_recordings"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="@string/list_recordings" />-->
-
-<!--        <Button-->
-<!--            android:id="@+id/start_recording"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="@string/start_recording" />-->
-
-<!--        <Button-->
-<!--            android:id="@+id/stop_recording"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="@string/stop_recording" />-->
-
-<!--        <Button-->
-<!--            android:id="@+id/download_recording"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="@string/download_recording" />-->
-
-<!--        <Button-->
-<!--            android:id="@+id/delete_recording"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="@string/delete_recording" />-->
-
-<!--        <View-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="1dp"-->
-<!--            android:layout_marginStart="10dp"-->
-<!--            android:layout_marginTop="2dp"-->
-<!--            android:layout_marginEnd="10dp"-->
-<!--            android:layout_marginBottom="2dp"-->
-<!--            android:background="@android:color/white" />-->
 
         <Button
             android:id="@+id/toggle_SDK_mode"
