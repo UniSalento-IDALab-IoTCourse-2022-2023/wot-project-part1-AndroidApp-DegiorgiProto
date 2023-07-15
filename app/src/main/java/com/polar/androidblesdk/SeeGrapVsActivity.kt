@@ -73,93 +73,48 @@ class SeeGrapVsActivity : AppCompatActivity() {
 
         array.sortBy { stringToFloat(it.hour) }
         val filterArray2 = array.filter { it.ecg != "0" }
+        var i = 0;
         val entries2 = filterArray2.map {
-            Entry(stringToFloat(it.hour), it.ecg.toFloat())
+            i += 1
+            val data = addDist(stringToFloat(it.hour), i)
+            Entry(data, it.ecg.toFloat())
         }
 
         array.sortBy { stringToFloat(it.hour) }
         val filterArray3 = array.filter { it.acc != "0" }
+        var j = 0;
         val entries3 = filterArray3.map {
-            Entry(stringToFloat(it.hour), it.acc.toFloat())
+            j += 1
+            val data = addDist(stringToFloat(it.hour), j)
+            Entry(data, it.acc.toFloat())
         }
 
         array.sortBy { stringToFloat(it.hour) }
         val filterArray4 = array.filter { it.gyro != "0" }
+        var k = 0;
         val entries4 = filterArray4.map {
-            Entry(stringToFloat(it.hour), it.gyro.toFloat())
+            k += 1
+            val data = addDist(stringToFloat(it.hour), k)
+            Entry(data, it.gyro.toFloat())
         }
 
         array.sortBy { stringToFloat(it.hour) }
         val filterArray5 = array.filter { it.magnet != "0" }
+        var l = 0;
         val entries5 = filterArray5.map {
-            Entry(stringToFloat(it.hour), it.magnet.toFloat())
+            l += 1
+            val data = addDist(stringToFloat(it.hour), l)
+            Entry(data, it.magnet.toFloat())
         }
 
         array.sortBy { stringToFloat(it.hour) }
         val filterArray6 = array.filter { it.ppi != "0" }
+        var m = 0;
         val entries6 = filterArray6.map {
-            Entry(stringToFloat(it.hour), it.ppi.toFloat())
+            m += 1
+            val data = addDist(stringToFloat(it.hour), m)
+            Entry(data, it.ppi.toFloat())
         }
-
-//        val entries1 = arrayListOf(
-//            Entry(0f, 1f),
-//            Entry(1f, 4f),
-//            Entry(2f, 8f),
-//            Entry(3f, 6f),
-//            Entry(4f, 2f),
-//            Entry(5f, 9f),
-//            Entry(3f, 2f)
-//        )
-//
-//        val entries2 = arrayListOf(
-//            Entry(0f, 1f),
-//            Entry(1f, 4f),
-//            Entry(2f, 8f),
-//            Entry(3f, 6f),
-//            Entry(4f, 2f),
-//            Entry(5f, 9f),
-//            Entry(3f, 2f)
-//        )
-//
-//        val entries3 = arrayListOf(
-//            Entry(0f, 1f),
-//            Entry(1f, 4f),
-//            Entry(2f, 8f),
-//            Entry(3f, 6f),
-//            Entry(4f, 2f),
-//            Entry(5f, 9f),
-//            Entry(3f, 2f)
-//        )
-//
-//        val entries4 = arrayListOf(
-//            Entry(0f, 1f),
-//            Entry(1f, 4f),
-//            Entry(2f, 8f),
-//            Entry(3f, 6f),
-//            Entry(4f, 2f),
-//            Entry(5f, 9f),
-//            Entry(3f, 2f)
-//        )
-//
-//        val entries5 = arrayListOf(
-//            Entry(0f, 1f),
-//            Entry(1f, 4f),
-//            Entry(2f, 8f),
-//            Entry(3f, 6f),
-//            Entry(4f, 2f),
-//            Entry(5f, 9f),
-//            Entry(3f, 2f)
-//        )
-//
-//        val entries6 = arrayListOf(
-//            Entry(0f, 1f),
-//            Entry(1f, 4f),
-//            Entry(2f, 8f),
-//            Entry(3f, 6f),
-//            Entry(4f, 2f),
-//            Entry(5f, 9f),
-//            Entry(3f, 2f)
-//        )
 
         val dataset1 = LineDataSet(entries1, "Heart Rate")
         dataset1.color = Color.RED
@@ -235,8 +190,13 @@ class SeeGrapVsActivity : AppCompatActivity() {
         val timeArray = timeString.split(":")
         val hours = timeArray[0].toFloat()
         val minutes = timeArray[1].toFloat() / 100
-        val seconds = ((timeArray[2].toFloat() / 10000) + 0.005).toFloat()
+        val seconds = timeArray[2].toFloat() / 10000
         val totalSeconds = hours + minutes + seconds
         return totalSeconds
+    }
+
+    fun addDist(value: Float, i: Int): Float {
+        val j = i.toFloat() / 10000
+        return value + j
     }
 }

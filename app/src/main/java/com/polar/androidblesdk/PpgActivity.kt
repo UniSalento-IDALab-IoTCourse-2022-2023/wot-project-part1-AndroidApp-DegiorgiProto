@@ -25,7 +25,7 @@ class PpgActivity : AppCompatActivity() {
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_graph)
+        setContentView(R.layout.activity_ppg)
 
         val email = intent.getStringExtra("email")
         val data = intent.getStringExtra("datae")
@@ -53,49 +53,32 @@ class PpgActivity : AppCompatActivity() {
         chart3 = findViewById(R.id.chart3)
 
         array.sortBy { stringToFloat(it.hour) }
-        val entries1 = array.map {
-            Entry(stringToFloat(it.hour), it.ppg1.toFloat())
+        val filterArray1 = array.filter { it.ppg1 != "0" }
+        var m = 0;
+        val entries1 = filterArray1.map {
+            m += 1
+            val data = addDist(stringToFloat(it.hour), m)
+            Entry(data, it.ppg1.toFloat())
+        }
+
+
+        array.sortBy { stringToFloat(it.hour) }
+        val filterArray2 = array.filter { it.ppg2 != "0" }
+        var n = 0;
+        val entries2 = filterArray2.map {
+            n += 1
+            val data = addDist(stringToFloat(it.hour), n)
+            Entry(data, it.ppg1.toFloat())
         }
 
         array.sortBy { stringToFloat(it.hour) }
-        val entries2 = array.map {
-            Entry(stringToFloat(it.hour), it.ppg2.toFloat())
+        val filterArray3 = array.filter { it.ppg3 != "0" }
+        var o = 0;
+        val entries3 = filterArray3.map {
+            o += 1
+            val data = addDist(stringToFloat(it.hour), o)
+            Entry(data, it.ppg3.toFloat())
         }
-
-        array.sortBy { stringToFloat(it.hour) }
-        val entries3 = array.map {
-            Entry(stringToFloat(it.hour), it.ppg3.toFloat())
-        }
-
-//        val entries1 = arrayListOf(
-//            Entry(0f, 1f),
-//            Entry(1f, 4f),
-//            Entry(2f, 8f),
-//            Entry(3f, 6f),
-//            Entry(4f, 2f),
-//            Entry(5f, 9f),
-//            Entry(3f, 2f)
-//        )
-//
-//        val entries2 = arrayListOf(
-//            Entry(0f, 1f),
-//            Entry(1f, 4f),
-//            Entry(2f, 8f),
-//            Entry(3f, 6f),
-//            Entry(4f, 2f),
-//            Entry(5f, 9f),
-//            Entry(3f, 2f)
-//        )
-//
-//        val entries3 = arrayListOf(
-//            Entry(0f, 1f),
-//            Entry(1f, 4f),
-//            Entry(2f, 8f),
-//            Entry(3f, 6f),
-//            Entry(4f, 2f),
-//            Entry(5f, 9f),
-//            Entry(3f, 2f)
-//        )
 
         val dataset1 = LineDataSet(entries1, "ppg0")
         dataset1.color = Color.RED
@@ -139,5 +122,10 @@ class PpgActivity : AppCompatActivity() {
         val seconds = timeArray[2].toFloat() / 10000
         val totalSeconds = hours + minutes + seconds
         return totalSeconds
+    }
+
+    fun addDist(value: Float, i: Int): Float {
+        val j = i.toFloat() / 10000
+        return value + j
     }
 }

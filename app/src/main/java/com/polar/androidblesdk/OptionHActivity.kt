@@ -8,6 +8,8 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.widget.Button
@@ -519,8 +521,8 @@ class OptionHActivity : AppCompatActivity() {
     }
 
     private fun showToast(message: String) {
-        val toast = Toast.makeText(applicationContext, message, Toast.LENGTH_LONG)
-        toast.show()
+        val handler = Handler(Looper.getMainLooper())
+        handler.post {Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()}
     }
 
     private fun showSnackbar(message: String) {
