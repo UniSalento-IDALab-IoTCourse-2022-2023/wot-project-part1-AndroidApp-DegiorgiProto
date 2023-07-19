@@ -9,3 +9,7 @@ L'architettura è costituita da:
 Questa repository in particolare riguarda l'app android, compresa di front end e backend.
 La cartella _layout_ è lo scheletro del front end.
 La cartella _androidblesdk_ contiene la business logic che permette la gestione del front end e due file che gestiscono il backend, ovvero la comunicazione con il server per la gestione dei dati e l'istanza di un web socket utilizzato per la gestione di eventuali notifiche push da parte del server stesso.
+
+### ATTENZIONE
+Tutti gli URL utilizzati sono personalizzabili; c'è infatti la possibilità di cambiare l'indirizzo IP con il proprio indirizzo corrispondente dalla wlan, con localhost o con un indirizzo IP corrispondente ad un servizio Cloud, a seconda di dove si trova il server e il database.
+In questo caso specifico l'idea è stata di usare il servizio AWS EC2 su cui istanziare il database.
