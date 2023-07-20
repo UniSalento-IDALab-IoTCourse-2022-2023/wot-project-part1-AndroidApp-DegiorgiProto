@@ -67,8 +67,11 @@ class SeeGrapVsActivity : AppCompatActivity() {
 
         array.sortBy { stringToFloat(it.hour) }
         val filterArray1 = array.filter { it.heartRate != "0" }
+        var s = 0;
         val entries1 = filterArray1.map {
-            Entry(stringToFloat(it.hour), it.heartRate.toFloat())
+            s += 1
+            val data = addDist(stringToFloat(it.hour), s)
+            Entry(data, it.heartRate.toFloat())
         }
 
         array.sortBy { stringToFloat(it.hour) }

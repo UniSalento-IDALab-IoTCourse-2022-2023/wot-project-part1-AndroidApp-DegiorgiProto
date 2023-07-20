@@ -28,7 +28,7 @@ class LoginActivity : AppCompatActivity() {
         val register = findViewById<Button>(R.id.btnReg)
 
         val myConn = Backend();
-
+        
         //button login
         login.setOnClickListener {
             //credenziali cloud database controllo
